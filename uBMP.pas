@@ -1,4 +1,4 @@
-﻿UNIT uBMP;
+UNIT uBMP;
 {$MODE objfpc}{$H+}
 INTERFACE
 Uses Classes,SysUtils;
@@ -122,7 +122,11 @@ begin
 end.
 //$Log: WriteBMP.pas,v $
 //Revision 1.3  2017/08/27 06:30:43  average
-
+//上下反転にした
+//
+//Revision 1.2  2017/08/26 14:50:31  average
+//Unixのビットマップと違うみたいなので、上下を反転
+//
 //Revision 1.1  2016/11/22 16:03:11  average
 //Initial revision
 //
