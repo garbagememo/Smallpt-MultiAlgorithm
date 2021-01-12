@@ -13,7 +13,7 @@ CONST
    wideStr   = 'wide';
    HeightStr = 'h';
    ratioStr  = 'ratio';
-   SampleStr = 'samples'
+   SampleStr = 'samples';
    distStr   = 'dist';
    SphereStr = 'Sphere';
    RadiusStr = 'radius';
@@ -23,9 +23,12 @@ CONST
    colorStr  = 'color';
 
 
-function ReadXMLConf(FN:string):ScreenRecord;
+function ReadXMLConf(FN:string):SceneRecord;
 procedure WriteXMLScene(ScR :SceneRecord;fn:string);
 
+  function RefToStr(ref:RefType):String;
+  function StrToRef(S:String):RefType;
+  
 IMPLEMENTATION
 function FtoSF(r:real):UnicodeString;
 BEGIN
@@ -43,7 +46,6 @@ var
   DebugSt:Widestring;
 BEGIN
   Debugst:=TDOMElement(wNode).GetAttribute('x');
-  writeln(' debug st=',Debugst);
   result.x:=StrToFloat(TDOMElement(wNode).GetAttribute('x'));
   result.y:=StrToFloat(TDOMElement(wNode).GetAttribute('y'));
   result.z:=StrToFloat(TDOMElement(wNode).GetAttribute('z'));
@@ -57,6 +59,7 @@ begin
   TDOMElement(wNode).SetAttribute(HeightStr,IntToStr(cam.h)  );
   TDOMElement(wNode).SetAttribute(ratioStr,FtoSF(cam.ratio) );
   TDOMElement(wNode).SetAttribute(distStr,FtoSF(cam.dist) );
+   TDOMElement(wNode).SetAttribute(SampleStr,FtoSF(cam.samples));
 //子ノードを作成する
   NodeOrg:= xdoc.CreateElement(OrgStr);      // 子ノードを一つ作成する
   SetVectAttribute(NodeOrg,cam.o);           // 属性を作成する
@@ -136,7 +139,7 @@ var
   ref:RefType;
   spr:TList;
   cam:CameraRecord;
-  w,h:integer;
+  w,h,sams:integer;
   ratio,dist:real;
   o,d:VecRecord;
 begin
@@ -173,6 +176,7 @@ begin
        ratio:=StrToFloat(TDOMElement(Child).GetAttribute(RatioStr));
        w:=StrToInt(TDOMElement(Child).GetAttribute(WideStr));
        h:=StrToInt(TDOMElement(Child).GetAttribute(HeightStr));
+       sams:=StrToInt(TDOMElement(Child).GetAttribute(SampleStr));
        wNode:=Child.FirstChild;
        while Assigned(wNode) do begin
          if wNode.NodeName=OrgStr then begin
@@ -184,13 +188,26 @@ begin
          wNode:=wNode.NextSibling;
        END;
        cam.Setup(o,d,w,h,ratio,dist);
+       cam.SetSamples(sams);
     END;
     Child:=Child.NextSibling;
   end;
   result.spl:=spr;
   result.cam:=cam;
 end;
-
+function RefToStr(ref:RefType):String;
+const
+  RSA:array[RefType] of string=('DIFF','SPEC','REFR');
+BEGIN
+  result:=RSA[ref];
+END;
+function StrToRef(S:String):RefType;
+begin
+  result:=DIFF;
+  IF S='DIFF' THEN result:=DIFF;
+  IF S='SPEC' THEN result:=SPEC;
+  IF S='REFR' THEN result:=REFR;
+end;
 BEGIN
 END.
 

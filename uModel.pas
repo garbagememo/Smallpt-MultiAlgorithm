@@ -7,10 +7,11 @@ uses SysUtils,Classes,uVect;
 
 
 const
-  eps=1e-4;
-  INF=1e20;
-  M_1_PI=1/pi;
-  M_2PI=2*pi;
+  eps            = 1e-4;
+  INF            = 1e20;
+  M_1_PI         = 1/pi;
+  M_2PI          = 2*pi;
+  DefaultSamples = 16;
 type
   SphereClass=CLASS
     rad,rad2:real;       //radius, radius^2
@@ -20,12 +21,14 @@ type
     function intersect(const r:RayRecord):real;
   END;
   CameraRecord=Record
-    o,d,cx,cy:VecRecord;
-    dist:real;
-    w,h:integer;
-    ratio:real;
-    procedure Setup(o_,d_:VecRecord;w_,h_:integer;ratio_,dist_:real);
-    function Ray(x,y,sx,sy:integer):RayRecord;
+    o,d,cx,cy : VecRecord;
+    dist      : real;
+    w,h       : integer;
+    ratio     : real;
+    samples   : integer;
+    procedure Setup(o_,d_: VecRecord;w_,h_:integer;ratio_,dist_:real);
+    procedure SetSamples(sam :integer);
+    function Ray(x,y,sx,sy : integer):RayRecord;
   END;
   SceneRecord=RECORD
     spl:TList;
@@ -122,6 +125,12 @@ begin
   o:=o_;d:=VecNorm(d_);
   cx:=CreateVec(ratio*w_/h_,0,0);
   cy:=VecNorm(cx/d_)*ratio;
+   samples:=DefaultSamples;
+end;
+
+procedure CameraRecord.SetSamples(sam :integer );
+begin
+   samples:=sam;
 end;
 
 function CameraRecord.Ray(x,y,sx,sy:integer):RayRecord;
@@ -187,7 +196,7 @@ ScList:=TList.Create;
   ScList.add( SphereClass.Create(1e5, CreateVec(50,-1e5+81.6,81.6), ZeroVec,CreateVec(0.75,0.75,0.75),DIFF) );//Top
   ScList.add( SphereClass.Create(16.5,CreateVec(27,16.5,47),        ZeroVec,CreateVec(1,1,1)*0.999,   SPEC) );//Mirror
   ScList.add( SphereClass.Create(16.5,CreateVec(73,16.5,88),        ZeroVec,CreateVec(1,1,1)*0.999,   REFR) );//Glass
-  ScList.add( SphereClass.Create(600,CreateVec(50,681.6-0.27,81.6), CreateVec(4,4,4)*3,   ZeroVec,  DIFF) );//Ligth
+  ScList.add( SphereClass.Create(600,CreateVec(50,681.6-0.27,81.6), CreateVec(4,4,4),   ZeroVec,  DIFF) );//Ligth
 
 
 
