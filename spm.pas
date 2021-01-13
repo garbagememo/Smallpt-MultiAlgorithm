@@ -2,7 +2,7 @@
 {$MODE objfpc}{$H+}
 {$INLINE ON}
 
-uses SysUtils,Classes,uVect,uBMP,uModel,Math,getopts;
+uses SysUtils,Classes,uVect,uBMP,uModel,uXML,Math,getopts;
 
 const 
   eps=1e-4;
@@ -21,23 +21,10 @@ type
 
 var
   sph:TList;
-procedure OrgInitScene;
-begin
-  sph:=TList.Create;
-  sph.add( SphereClass.Create(1e5, CreateVec( 1e5+1,40.8,81.6),  ZeroVec,CreateVec(0.75,0.25,0.25),DIFF) );//Left
-  sph.add( SphereClass.Create(1e5, CreateVec(-1e5+99,40.8,81.6), ZeroVec,CreateVec(0.25,0.25,0.75),DIFF) );//Right
-  sph.add( SphereClass.Create(1e5, CreateVec(50,40.8, 1e5),      ZeroVec,CreateVec(0.75,0.75,0.75),DIFF) );//Back
-  sph.add( SphereClass.Create(1e5, CreateVec(50,40.8,-1e5+170),  ZeroVec,CreateVec(0,0,0),      DIFF) );//Front
-  sph.add( SphereClass.Create(1e5, CreateVec(50, 1e5, 81.6),     ZeroVec,CreateVec(0.75,0.75,0.75),DIFF) );//Bottomm
-  sph.add( SphereClass.Create(1e5, CreateVec(50,-1e5+81.6,81.6), ZeroVec,CreateVec(0.75,0.75,0.75),DIFF) );//Top
-  sph.add( SphereClass.Create(16.5,CreateVec(27,16.5,47),        ZeroVec,CreateVec(1,1,1)*0.999, SPEC) );//Mirror
-  sph.add( SphereClass.Create(16.5,CreateVec(73,16.5,88),        ZeroVec,CreateVec(1,1,1)*0.999, REFR) );//Glass
-  sph.add( SphereClass.Create(600, CreateVec(50,681.6-0.27,81.6),CreateVec(12,12,12),    ZeroVec,DIFF) );//Ligth
-end;
 
 function intersect(const r:RayRecord;var t:real; var id:integer):boolean;
 var 
-  n,d:real;
+  d:real;
   i:integer;
 begin
   t:=INF;
@@ -426,24 +413,23 @@ END;
 
 
 VAR
-  x,y,sx,sy,i,s                     : INTEGER;
+  x,y,sx,sy,s                     : INTEGER;
   w,h,samps,height                  : INTEGER;
-  temp,d                            : VecRecord;
-  r1,r2,dx,dy                       : real;
+  temp                            : VecRecord;
   tempRay                           : RayRecord;
    Cam                              : CameraRecord;
-  cx,cy                             : VecRecord;
-  tColor,r,camPosition,camDirection : VecRecord;
+  tColor,r: VecRecord;
 
   BMPClass:BMPIOClass;
-  ScrWidth,ScrHeight:integer;
+  T1,T2:TDateTime;
+  HH,MM,SS,MS:WORD;
   vColor:rgbColor;
   ArgInt:integer;
   FN,ArgFN:string;
   c:char;
   Rt:TRenderClass;
-  SR:SnapRecord;
    ModelID:integer;
+   ScR:SceneRecord;
 BEGIN
  FN:='temp.bmp';
    Rt:=TRenderClass.Create;
@@ -451,7 +437,7 @@ BEGIN
   w:=320 ;h:=240;  samps := 16;
   c:=#0;
   repeat
-    c:=getopt('m:o:r:s:w:');
+    c:=getopt('m:o:r:s:w:x:');
 
     case c of
       'm': BEGIN
@@ -479,20 +465,27 @@ BEGIN
                END;
          END;
       END;
-      'o' : BEGIN
+      'o'    : BEGIN
          ArgFN:=OptArg;
          IF ArgFN<>'' THEN FN:=ArgFN;
          writeln ('Output FileName =',FN);
       END;
-      's' : BEGIN
+      's'    : BEGIN
         ArgInt:=StrToInt(OptArg);
         samps:=ArgInt;
         writeln('samples =',ArgInt);
       END;
-      'w' : BEGIN
+      'w'    : BEGIN
          ArgInt:=StrToInt(OptArg);
          w:=ArgInt;h:=w *3 div 4;
          writeln('w=',w,' ,h=',h);
+      END;
+      'x'    : BEGIN
+         writeln('FN=',OptArg);
+         ScR:=ReadXMLConf(OptArg);
+         w:=Scr.Cam.w;h:=ScR.Cam.h;
+         sph:=ScR.spl;
+         samps:=Scr.Cam.samples;
       END;
       '?',':' : BEGIN
          writeln(' -o [finename] output filename');
@@ -507,8 +500,8 @@ BEGIN
   InitScene;
   Randomize;
   Cam.Setup(CreateVec(50,52,295.6),CreateVec(0,-0.042612,-1),w,h,0.5135,140);
-  ScrWidth:=0;
-  ScrHeight:=0;
+
+  T1:=Time;
   Writeln ('The time is : ',TimeToStr(Time));
 
   FOR y := 0 to h-1 DO BEGIN
@@ -532,6 +525,9 @@ BEGIN
       BMPClass.SetPixel(x,height-y,vColor);
     END;(* for x *)
   END;(*for y*)
-  Writeln ('The time is : ',TimeToStr(Time));
+    T2:=Time-T1;
+    DecodeTime(T2,HH,MM,SS,MS);
+    Writeln ('The time is : ',HH,'h:',MM,'min:',SS,'sec');
+   
   BMPClass.WriteBMPFile(FN);
 END.
