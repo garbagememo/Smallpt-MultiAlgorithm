@@ -434,6 +434,7 @@ BEGIN
  FN:='temp.bmp';
    Rt:=TRenderClass.Create;
    InitScene;
+   ModelID:=1;
   w:=320 ;h:=240;  samps := 16;
   c:=#0;
   repeat
@@ -488,18 +489,24 @@ BEGIN
          samps:=Scr.Cam.samples;
       END;
       '?',':' : BEGIN
+         writeln(' -m [Model ID] Rendering Model');
+         writeln(' -r [Render Algrithm] r1=Orignal  r2=Next Event  r3=No Loop');
          writeln(' -o [finename] output filename');
          writeln(' -s [samps] sampling count');
          writeln(' -w [width] screen width pixel');
+         writeln(' -x [filename] input Scene XML file');
          halt;
       END;
     end; { case }
   until c=endofoptions;
   height:=h;
   BMPClass:=BMPIOClass.Create(w,h);
-  InitScene;
+   SLR.InitScene(w,h);
+   ScR:=SLR.CopyScene(ModelID);
+   sph:=ScR.spl;
+   cam:=ScR.cam;
   Randomize;
-  Cam.Setup(CreateVec(50,52,295.6),CreateVec(0,-0.042612,-1),w,h,0.5135,140);
+  //Cam.Setup(CreateVec(50,52,295.6),CreateVec(0,-0.042612,-1),w,h,0.5135,140);
 
   T1:=Time;
   Writeln ('The time is : ',TimeToStr(Time));
